@@ -1,5 +1,10 @@
 import axios from "axios";
 import * as fs from "node:fs";
+import {
+	buildDriversUrl,
+	buildIntervalsUrl,
+	buildSessionsUrl,
+} from "./openf1_web/api.doc";
 const SESSION = "latest";
 
 const RouteTargetsToUrlFunc = {
@@ -10,14 +15,13 @@ const RouteTargetsToUrlFunc = {
 
 const routeCallInput = {
 	interval: {
-		session_key: SESSION,
-		interval: 0.005,
+		queryParams: { session_key: SESSION, interval: 0.005 },
 	},
 	drivers: {
-		session_key: SESSION,
+		queryParams: { session_key: SESSION },
 	},
 	sessions: {
-		session_key: SESSION,
+		queryParams: { session_key: SESSION },
 	},
 };
 
@@ -25,12 +29,12 @@ async function main() {
 	const [, , ...args] = process.argv;
 	const [filePath, routeTarget, interval] = args;
 
-	if (!filePath || !routeTarget || !interval) {
+	if (!filePath || !routeTarget) {
 		console.log("Usage: node index.js <filePath> <routeTarget> <interval>");
 		process.exit(1);
 	}
 
-	if (RouteTargetsToUrlFunc[routeTarget] === undefined) {
+	if (RouteTargetsToUrlFunc?.[routeTarget] === undefined) {
 		console.log("Invalid route target");
 		console.log(
 			"Valid route targets: ",
@@ -39,17 +43,59 @@ async function main() {
 		process.exit(0);
 	}
 
-	const writeStream = fs.createWriteStream(filePath, { flags: "a" });
+	if (RouteTargetsToUrlFunc?.[routeTarget]?.useInterval && !interval) {
+		console.log("Interval is required for this route target");
+		process.exit(0);
+	}
 
-	setInterval(
-		() => {
-			// hit api, writeLine of data
-			axios.get(
-				RouteTargetsToUrlFunc[routeTarget].urlFunc({ session_key: SESSION }),
+	try {
+		const writeStream = fs.createWriteStream(filePath);
+		if (RouteTargetsToUrlFunc?.[routeTarget]?.useInterval) {
+			setInterval(
+				async () => {
+					// hit api, writeLine of data
+					const res = await axios.get(
+						RouteTargetsToUrlFunc?.[routeTarget]?.urlFunc(
+							routeCallInput[routeTarget],
+						),
+					);
+					console.log("🚀 ~ res:", res);
+
+					handleData(writeStream, res.data);
+				},
+				Number.parseInt(interval, 10),
 			);
-		},
-		Number.parseInt(interval, 10),
-	);
+		} else {
+			const res = await axios.get(
+				RouteTargetsToUrlFunc?.[routeTarget]?.urlFunc(
+					routeCallInput[routeTarget],
+				),
+			);
+			handleData(writeStream, res.data);
+		}
+	} catch (error) {
+		console.error("Error:", error);
+	}
+}
+
+function handleData(
+	writeStream: fs.WriteStream,
+	data: Record<string, unknown> | Record<string, unknown>[],
+) {
+	if (Array.isArray(data)) {
+		for (const item of data) {
+			writeLine({ writeStream, data: item });
+		}
+	} else {
+		writeLine({ writeStream, data });
+	}
+}
+
+function formatData(data: Record<string, unknown>): string {
+	return Object.entries(data)
+		.map(([key, value]) => `${key}: ${value}`)
+		.join(", ")
+		.concat("\n");
 }
 
 function writeLine({
@@ -59,8 +105,9 @@ function writeLine({
 	writeStream: fs.WriteStream;
 	data: Record<string, unknown>;
 }) {
+	const formattedData = formatData(data);
 	return new Promise((resolve, reject) => {
-		if (writeStream.write(data)) {
+		if (writeStream.write(formattedData)) {
 			process.nextTick(resolve);
 		} else {
 			writeStream.once("drain", () => {

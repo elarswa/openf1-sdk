@@ -19,7 +19,7 @@ export const writeSchema = ({
 	});
 };
 
-function convertDataToHeaders<T extends {}>(
+export function convertDataToHeaders<T extends {}>(
 	data: T[],
 ): Record<string, string>[] {
 	const [firstItem] = data;
