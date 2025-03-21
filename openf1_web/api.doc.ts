@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
 export const BASE_URL = "https://api.openf1.org/v1";
 
@@ -76,7 +76,7 @@ export const SendF1Request = <
 >(
 	endpoint: K,
 	request: T,
-): Promise<ReturnType<typeof axios.get<EndpointMap[K]["response"]>>> => {
+): Promise<AxiosResponse<EndpointMap[K]["response"]>> => {
 	if (!endpoints.includes(endpoint)) throw new Error("Invalid endpoint");
 
 	const { queryParams } = request;
