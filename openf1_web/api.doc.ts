@@ -2,12 +2,6 @@ import axios from "axios";
 
 export const BASE_URL = "https://api.openf1.org/v1";
 
-export interface QueryParamDoc {
-	key: string;
-	type: string;
-	description: string;
-}
-
 export type AllRequests =
 	| CarDataRequest
 	| DriversRequest
