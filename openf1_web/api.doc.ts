@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 export const BASE_URL = "https://api.openf1.org/v1";
 
@@ -70,7 +70,7 @@ export interface EndpointMap {
 	"/weather": { request: WeatherRequest; response: WeatherResponse };
 }
 
-export const SendF1Request = <
+export const OpenF1Request = <
 	K extends AllowedEndpoints,
 	T extends EndpointMap[K]["request"],
 >(
