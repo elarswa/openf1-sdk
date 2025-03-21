@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { type AxiosResponse } from "axios";
 
 export const BASE_URL = "https://api.openf1.org/v1";
 
