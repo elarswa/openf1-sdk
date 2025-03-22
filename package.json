@@ -2,13 +2,14 @@
 	"name": "openf1-sdk",
 	"version": "1.0.0",
 	"description": "an sdk for interacting with openf1 api",
-	"main": "index.ts",
-	"type": "module",
 	"scripts": {
-		"build": "npx tsc  --project tsconfig.json --outDir dist",
-		"test": "jest --env=node"
+		"test": "jest --env=node",
+		"clean": "tsc --build --clean",
+		"build": "tsc  --project tsconfig.json && cp readme.md dist/readme.md",
+		"pack": "cd dist && npm pack",
+		"publish": "cd dist && npm publish --access public"
 	},
-	"keywords": [],
+	"keywords": ["f1", "formula1", "openf1", "sdk"],
 	"author": "elarswa",
 	"license": "MIT",
 	"dependencies": {
@@ -26,7 +27,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/elarswa/openf1-sdk.git"
+		"url": "git+https://github.com/elarswa/openf1-sdk.git"
 	},
 	"bugs": {
 		"url": "https://github.com/elarswa/openf1-sdk/issues"
